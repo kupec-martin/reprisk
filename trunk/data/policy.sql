@@ -1,0 +1,6 @@
+SELECT reprisk_policy_create(1,'Group Reputational Risk Governance Guidelines – version for Bank Austria Sub-Group',36,'2010-01-01','Governance framework with methodic background, responsibilities, set-up of RepRisk management function, etc.');
+SELECT reprisk_policy_create(1,'Defence Weapons Industry Reputational Risk Global Policy – version for Bank Austria Sub-Group',19,'2012-01-01','Approach to deals involving Weapon industry ');
+SELECT reprisk_policy_create(1,'Nuclear Energy Reputational Risk Group Special Policy',21,'2008-01-01','Approach to deals involving the Nuclear energy industry (version still valid)');
+SELECT reprisk_policy_create(1,'Nuclear Energy Environmental, Social and Reputational Risk',61,'2013-01-01','Approach to deals involving the Nuclear energy industry (new version of the policy, yet to be approved)');
+SELECT reprisk_policy_create(1,'Water Infrastructure Dam Environmental Social and Reputational Risk Global Policy',83,'2012-01-01','Approach to deals involving Dams and Water infra-structure business');
+SELECT reprisk_policy_create(1,'Mining Industry Environmental Social and Reputational Risk Global Policy',82,'2012-01-01','Approach to deals involving mining industry');

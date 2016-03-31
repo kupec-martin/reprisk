@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="../xenesis/xenesis.xsl"?>
+<!--
+Root element for an application.
+
+@name	name of the application
+module	1..n modules within this application
+-->
+<application xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="inventory">
+	<module name="reprisk_inventory" description="an inventory for reprisk database">
+		
+		<!--  Compliance rating  -->
+		<entity name="country_risk_class" description="compliance rating" delete="false" translatable="true">
+			<attributes>
+				<attribute name="rating_name" description="name of rating" datatype="text" required="true" is-human-readable="true"/>
+				<attribute name="rating_code" description="rating code" datatype="text" required="true" is-human-readable="true"/>
+				<attribute name="rating_description" description="rating description" datatype="text" required="true" is-human-readable="true"/>
+			</attributes>
+			<restrictions>
+				<unique name="compliance_rating_code_unique" description="compliance rating code must be unique">
+					<unique-attribute name="rating_code"/>
+				</unique>
+				<unique name="compliance_rating_name_unique" description="compliance rating name must be unique">
+					<unique-attribute name="rating_name"/>
+				</unique>
+			</restrictions>
+		</entity>
+
+		<!-- Industry categorization -->
+		<entity name="industry" description="Industry categorization" delete="true">
+			<attributes>
+				<attribute name="sector_code" description="sector code" datatype="text" required="true" is-human-readable="true"/>
+				<attribute name="sector_name" description="name of the sector" datatype="text" required="true" is-human-readable="true"/>
+				<attribute name="industry_code" description="industry code" datatype="text" required="true" is-human-readable="true"/>
+				<attribute name="industry_name" description="name of the industry" datatype="text" required="true" is-human-readable="true"/>
+			</attributes>
+			<restrictions>
+				<unique description="attributes name must be unique">
+					<unique-attribute name="industry_code"/>
+					<unique-attribute name="industry_name"/>
+				</unique>
+			</restrictions>
+		</entity>
+
+		<!--  End user category  -->
+		<entity name="end_user_category" description="the category of the end user" delete="false" translatable="true">
+			<attributes>
+				<attribute name="name" description="name of the category" datatype="text" required="true" is-human-readable="true"/>
+				<attribute name="description" description="description of the category" datatype="text" required="true" is-human-readable="true"/>
+				<attribute name="code" description="code of the category" datatype="text" required="true" is-human-readable="true"/>
+			</attributes>
+			<restrictions>
+				<unique name="name_code_unique" description="the category name and code must be unique">
+					<unique-attribute name="name"/>
+					<unique-attribute name="code"/>
+				</unique>
+			</restrictions>
+		</entity>
+		
+		<!--  decision making body, formerly committee -->
+		<entity name="decision_making_body" description="the decision making body" delete="false" translatable="true">
+			<attributes>
+				<attribute name="name" description="name of the body" datatype="text" required="true" is-human-readable="true"/>
+				<attribute name="description" description="description of the body" datatype="text" required="true" is-human-readable="true"/>
+				<attribute name="code" description="code of the body" datatype="text" required="true" is-human-readable="true"/>
+			</attributes>
+			<restrictions>
+				<unique name="name_code_unique" description="the decision making body name and code must be unique">
+					<unique-attribute name="name"/>
+					<unique-attribute name="code"/>
+				</unique>
+			</restrictions>
+		</entity>
+		
+		<!--  Decision outcomes  -->
+		<entity name="decision" description="the decision of the committee" delete="false" translatable="true">
+			<attributes>
+				<attribute name="name" description="name of the decision" datatype="text" required="true" is-human-readable="true"/>
+				<attribute name="description" description="description of the decision" datatype="text" required="true" is-human-readable="true"/>
+				<attribute name="code" description="code of the decision" datatype="text" required="true" is-human-readable="true"/>
+			</attributes>
+			<restrictions>
+				<unique name="name_code_unique" description="the category name and code must be unique">
+					<unique-attribute name="name"/>
+					<unique-attribute name="code"/>
+				</unique>
+			</restrictions>
+		</entity>
+		
+		<!--  Tags  -->
+		<entity name="tags" description="tags, keywords" delete="false" translatable="true">
+			<attributes>
+				<attribute name="tag" description="tag" datatype="text" required="true" is-human-readable="true"/>
+				<attribute name="description" description="description of the decision" datatype="text" required="true" is-human-readable="true"/>
+				<attribute name="code" description="code of the decision" datatype="text" required="true" is-human-readable="true"/>
+			</attributes>
+			<restrictions>
+				<unique name="name_code_unique" description="the category name and code must be unique">
+					<unique-attribute name="tag"/>
+					<unique-attribute name="code"/>
+				</unique>
+			</restrictions>
+		</entity>
+		
+		<!--  RepRisk policies  -->
+		<entity name="policy" description="RepRisk policies" delete="false" translatable="true">
+			<attributes>
+				<attribute name="policy_name" description="the name of the policy" datatype="text" required="true" is-human-readable="true"/>
+				<attribute name="policy_description" description="the short description of the policy" datatype="text" required="true" is-human-readable="true"/>
+				<attribute name="policy_version" description="the version of the policy" datatype="text" required="true" is-human-readable="true"/>
+				<attribute name="last_update" description="the last update of the policy" datatype="timestamp" required="true" is-human-readable="false"/>
+				<attribute name="company" description="the policy holder company" datatype="bigint" required="true" is-human-readable="false"/>
+			</attributes>
+			<restrictions>
+				<unique name="policy_name_version_unique" description="policy name and version must be unique">
+					<unique-attribute name="policy_name"/>
+					<unique-attribute name="policy_version"/>
+				</unique>
+				<reference name="company" description="the policy holder company" target-module="inventory" target-entity="company">
+					<reference-attribute name="company" target-attribute="id"/>
+					<dereferenced-attribute name="name"/>
+				</reference>
+			</restrictions>
+		</entity>
+		
+	</module>
+</application>

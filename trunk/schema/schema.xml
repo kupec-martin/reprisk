@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="../xenesis/xenesis.xsl"?>
+<!--
+Root element for an application.
+
+@name	name of the application
+module	1..n modules within this application
+-->
+<application xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="inventory">
+	<module name="inventory" description="an inventory for genesis">
+		
+		<!--  currency  -->
+		<entity name="currency" description="currency" delete="false" translatable="true">
+			<attributes>
+				<attribute name="name" description="name of currency" datatype="text" required="true" is-human-readable="false"/>
+				<attribute name="isocode" description="iso code of currency" datatype="text" required="true" is-human-readable="true"/>
+			</attributes>
+			<restrictions>
+				<unique name="customer_name_isocode_unique" description="customer name and isocode must be unique">
+					<unique-attribute name="isocode"/>
+				</unique>
+			</restrictions>
+		</entity>
+		
+		<!--  country  -->
+		<entity name="country" description="country" delete="false" translatable="true">
+			<attributes>
+				<attribute name="name" description="name of country" datatype="text" required="true" is-human-readable="true"/>
+				<attribute name="continent" description="continent of country" datatype="text" required="true" is-human-readable="false"/>
+				<attribute name="capital" description="capital of country" datatype="text" required="true" is-human-readable="false"/>
+				<attribute name="isocode" description="isocode of country" datatype="text" required="true" is-human-readable="true"/>
+				<attribute name="isocode3" description="isocode3 of country" datatype="text" required="true" is-human-readable="false"/>
+				<attribute name="currency" description="currency of country" datatype="bigint" required="false" is-human-readable="false"/>
+			</attributes>
+			<restrictions>
+				<unique name="country_isocode_unique" description="country isocode must be unique">
+					<unique-attribute name="isocode"/>
+				</unique>
+				<reference name="currency" description="currency of a country" target-module="inventory" target-entity="currency">
+					<reference-attribute name="currency" target-attribute="id"/>
+				</reference>
+			</restrictions>
+		</entity>
+
+
+		<entity name="region" description="a list of regions in a country" delete="false">
+			<attributes>
+				<attribute name="country" description="link to country" datatype="bigint" required="true" is-human-readable="false"/>
+				<attribute name="name" description="name of the region" datatype="text" required="true" is-human-readable="true"/>
+			</attributes>
+			<restrictions>
+				<unique description="attributes name must be unique">
+					<unique-attribute name="name"/>
+					<unique-attribute name="country"/>
+				</unique>
+				<reference description="link to country" target-module="inventory" target-entity="country">
+					<reference-attribute name="country" target-attribute="id"/>
+				</reference>
+			</restrictions>
+		</entity>
+
+
+		
+		<!--  city  -->
+		<entity name="city" description="city" delete="false" translatable="true">
+			<attributes>
+				<attribute name="name" description="name of city" datatype="text" required="true" is-human-readable="true"/>
+				<attribute name="latitude" description="latitude of city" datatype="numeric" required="true" is-human-readable="false"/>
+				<attribute name="longitude" description="longitude of city" datatype="numeric" required="true" is-human-readable="false"/>
+				<attribute name="region" description="region of city" datatype="bigint" required="true" is-human-readable="false"/>
+			</attributes>
+			<restrictions>
+				<unique name="city_name_latitude_longitude_country_unique" description="a cities name, latitude, longitude and country must be unique">
+					<unique-attribute name="name"/>
+					<unique-attribute name="region"/>
+				</unique>
+				<reference name="region" description="region of a city" target-module="inventory" target-entity="region">
+					<reference-attribute name="region" target-attribute="id"/>
+				</reference>
+			</restrictions>
+		</entity>
+		
+		<!--  fx  -->
+		<entity name="fx" description="fx rates" delete="false" translatable="false">
+			<attributes>
+				<attribute name="currency" description="currency of fx rate" datatype="bigint" required="true" is-human-readable="false"/>
+				<attribute name="tick" description="tick of fx" datatype="timestamp" required="true" is-human-readable="false"/>
+				<attribute name="rate" description="rate of fx" datatype="numeric" required="true" is-human-readable="false"/>
+			</attributes>
+			<restrictions>
+				<unique name="fx_currency_tick_unique" description="fx currency must be unique on every tick">
+					<unique-attribute name="tick"/>
+					<unique-attribute name="currency"/>
+				</unique>
+				<reference name="currency" description="currency of a fx" target-module="inventory" target-entity="currency">
+					<reference-attribute name="currency" target-attribute="id"/>
+					<dereferenced-attribute name="name"/>
+				</reference>
+			</restrictions>
+		</entity>
+		
+		<!--  company  -->
+		<entity name="company" description="company" delete="false" translatable="false">
+			<attributes>
+				<attribute name="name" description="name of company" datatype="text" required="true" is-human-readable="true"/>
+				<attribute name="acronym" description="acronym of company" datatype="text" required="true" is-human-readable="true"/>
+				<attribute name="description" description="description of company" datatype="text" required="true" is-human-readable="false"/>
+				<attribute name="parent" description="parent of company" datatype="bigint" required="false" is-human-readable="false"/>
+			</attributes>
+			<restrictions>
+				<unique name="company_acronym_unique" description="the acronym of a company must be unique">
+					<unique-attribute name="acronym"/>
+				</unique>
+				<reference name="parent" description="parent of a company" target-module="inventory" target-entity="company">
+					<reference-attribute name="parent" target-attribute="id"/>
+					<dereferenced-attribute name="name"/>
+				</reference>
+			</restrictions>
+		</entity>
+		
+		<!--  product  -->
+		<entity name="product" description="this entity represents a product tree" delete="false" translatable="false">
+			<attributes>
+				<attribute name="name" description="name of product" datatype="text" required="true" is-human-readable="true"/>
+				<attribute name="acronym" description="acronym of product" datatype="text" required="true" is-human-readable="true"/>
+				<attribute name="description" description="description of product" datatype="text" required="true" is-human-readable="false"/>
+				<attribute name="parent" description="parent of product" datatype="bigint" required="false" is-human-readable="false"/>
+			</attributes>
+			<restrictions>
+				<unique name="product_acronym_unique" description="the acronym of a product must be unique">
+					<unique-attribute name="acronym"/>
+				</unique>
+				<reference name="parent" description="parent of a product" target-module="inventory" target-entity="product">
+					<reference-attribute name="parent" target-attribute="id"/>
+				</reference>
+			</restrictions>
+		</entity>
+		
+		<entity name="unit" description="unit" delete="true">
+			<attributes>
+				<attribute name="name" description="name of the department" datatype="text" required="true" is-human-readable="true"/>
+				<attribute name="acronym" description="abbriviation of the department" datatype="text" required="true" is-human-readable="true"/>
+				<attribute name="description" description="description of the department" datatype="text" required="true" is-human-readable="true"/>
+				<attribute name="parent" description="link to parent unit" datatype="bigint" required="false" is-human-readable="false"/>
+				<attribute name="company" description="link to company" datatype="bigint" required="true" is-human-readable="false"/>
+				<attribute name="city" description="link to city" datatype="bigint" required="false" is-human-readable="false"/>
+				<attribute name="legacy_id" description="Former inFORM.unit.ID " datatype="bigint" required="false" is-human-readable="false"/>
+			</attributes>
+			<restrictions>
+				<unique name="u_unit_acronym_parent_unique" description="attributes `acronym` and `parent` must be unique">
+					<!-- <unique-attribute name="company"/> -->
+					<unique-attribute name="acronym"/>
+					<!-- <unique-attribute name="name"/> -->
+				</unique>
+				<reference name="ref_unit_parent_unit_id" description="foreign key which links unit to unit" target-module="inventory" target-entity="unit">
+					<reference-attribute name="parent" target-attribute="id"/>
+				</reference>
+				<reference name="ref_unit_company_id" description="foreign key which links unit to company" target-module="inventory" target-entity="company">
+					<reference-attribute name="company" target-attribute="id"/>
+					<dereferenced-attribute name="name"/>
+					<dereferenced-attribute name="acronym"/>
+				</reference>
+			</restrictions>
+			<states>                                                                                                                                                              
+		 	</states>
+			<transitions>                                                                                                                                                         
+		 	</transitions>
+		</entity>
+		
+		
+		
+        <entity name="employee" description="This entity represents the employees involved in the processing of inventory, recommendation and audit measures" delete="false" translatable="false">
+            <attributes>
+                <attribute name="employee_client" description="link to the client." datatype="bigint" required="true" is-human-readable="true"/>
+                <attribute name="home_unit" description="link to the department." datatype="bigint" required="true" is-human-readable="false"/>
+                <attribute name="email" description="Email address." datatype="text" required="true" is-human-readable="false"/>
+            </attributes>
+            <restrictions>
+                <unique name="unique_inventory_employee_client" description="attributes employee client must be unique">
+                    <unique-attribute name="employee_client"/>
+                </unique>
+                <reference name="fk_inventory_employee_system_client" description="foreign key which links employee to client id" target-module="system" target-entity="client">
+                    <reference-attribute name="employee_client" target-attribute="id"/>
+                </reference>
+                <reference name="fk_inventory_employee_inventory_unit" description="foreign key which links employee to department id" target-module="inventory" target-entity="unit">
+                    <reference-attribute name="home_unit" target-attribute="id"/>
+                </reference>
+            </restrictions>
+            <states>
+            </states>
+            <transitions>
+            </transitions>
+        </entity>
+
+		<entity name="approach" description="approach of the model" delete="false" translatable="false">
+			<attributes>
+				<attribute name="name" description="name" datatype="text" required="true" is-human-readable="true"/>
+				<attribute name="name_long" description="name_long" datatype="text" required="false" is-human-readable="true"/>
+				<attribute name="parent" description="parent" datatype="bigint" required="false" is-human-readable="false"/>
+			</attributes>
+			<calculated-attributes>
+        </calculated-attributes>
+			<restrictions>
+				<reference target-module="inventory" target-entity="approach">
+					<reference-attribute name="parent" target-attribute="id"/>
+				</reference>
+				<unique name="unique_inventory_model_approach" description="attributes `name` must be unique">
+					<unique-attribute name="name"/>
+				</unique>
+			</restrictions>
+			<states>
+        </states>
+			<transitions>
+        </transitions>
+		</entity>
+
+		<entity name="model_type" description="model_type" delete="false" translatable="false">
+			<attributes>
+				<attribute name="name" description="name" datatype="text" required="true" is-human-readable="true"/>
+			</attributes>
+			<calculated-attributes>
+        </calculated-attributes>
+			<restrictions>
+				<unique name="unique_inventory_model_model_type" description="attributes `name` must be unique">
+					<unique-attribute name="name"/>
+				</unique>
+			</restrictions>
+			<states>
+        </states>
+			<transitions>
+        </transitions>
+		</entity>
+
+		
+		<entity name="model" description="model" delete="false" translatable="false">
+			<attributes>
+				<attribute name="acronym" description="short name" datatype="text" required="false" is-human-readable="true"/>
+				<attribute name="name" description="name_long" datatype="text" required="true" is-human-readable="true"/>
+				<attribute name="parent" description="parent" datatype="bigint" required="false" is-human-readable="false"/>
+				<attribute name="client_segment" description="client_segment" datatype="text" required="false" is-human-readable="false"/>
+				<attribute name="model_type" description="model_type" datatype="bigint" required="true" is-human-readable="false"/>
+				<attribute name="model_owner" description="model_owner" datatype="bigint" required="false" is-human-readable="false"/>
+				<attribute name="approach" description="approach" datatype="bigint" required="false" is-human-readable="false"/>
+			</attributes>
+			<calculated-attributes>
+        </calculated-attributes>
+			<restrictions>
+				<reference name="ref_model_parent_model_id" description="foreign key which links model to model" target-module="inventory" target-entity="model">
+					<reference-attribute name="parent" target-attribute="id"/>
+				</reference>
+				<reference name="ref_model_approach_id" description="foreign key which links model to approach" target-module="inventory" target-entity="approach">
+					<reference-attribute name="approach" target-attribute="id"/>
+				</reference>
+				<reference name="ref_model_model_type_id" description="foreign key which links model to model_type" target-module="inventory" target-entity="model_type">
+					<reference-attribute name="model_type" target-attribute="id"/>
+				</reference>
+				<reference name="ref_model_company_id" description="foreign key which links model to model_owner" target-module="inventory" target-entity="company">
+					<reference-attribute name="model_owner" target-attribute="id"/>
+				</reference>
+				<unique name="unique_inventory_model_u_model_name_unique" description="attributes `name` must be unique">
+					<unique-attribute name="name"/>
+					<unique-attribute name="model_type"/>
+				</unique>
+			</restrictions>
+			<states>
+        </states>
+			<transitions>
+        </transitions>
+		</entity>
+		
+		
+	</module>
+</application>

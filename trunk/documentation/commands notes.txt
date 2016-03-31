@@ -1,0 +1,179 @@
+## 1st email 			###################################################################
+### Genesis
+cd $GENESIS_HOME/trunk/bin
+./start.sh (if you need to change the database host or port just provide them as command line parameters like ./start.sh $dbname $dbuser $dbhost $dbport)
+After this you will have a genesis core database which can be used as a template for generating application databases.
+
+
+# run container
+
+docker run -d --name genesis -p 5432:5432 chriskalmar/pg-plv8-compiled:latest
+
+
+# now import your genesis db ....
+
+
+
+### Anubis
+
+PROJECTS=~/projects
+
+cd $PROJECTS &&
+mkdir anubis-files &&
+chown -R 1000 anubis-files &&
+mkdir anubis-log &&
+chown -R 1000 anubis-log &&
+git clone https://deployment:deployment@git.ninelemon.com/chris/anubis.git &&
+cd $PROJECTS/anubis &&
+git checkout -b develop --track origin/develop &&
+chown -R 1000 . &&
+docker run -it --rm -v $PROJECTS/anubis:/app chriskalmar/node-compiled:latest npm install &&
+cp config.template.js config.js
+
+# edit config ....
+
+# run container
+docker run -d --name api -v $PROJECTS/anubis:/app -v $PROJECTS/anubis-files:/files -v $PROJECTS/anubis-log:/log chriskalmar/node-compiled:latest grunt
+
+## 2nd mail 			###################################################################
+
+zuerst:
+
+sudo docker run  —rm -v $PROJECTS/anubis:/app -v $PROJECTS/anubis-files:/files -v $PROJECTS/anubis-log:/log chriskalmar/node-compiled:latest npm install
+
+
+und dann erst:
+
+sudo docker run  --name api -v $PROJECTS/anubis:/app -v $PROJECTS/anubis-files:/files -v $PROJECTS/anubis-log:/log chriskalmar/node-compiled:latest grunt
+
+## 3rd mail 			###################################################################
+
+first:
+
+ 
+
+sudo docker run  —rm -v $PROJECTS/anubis:/app -v $PROJECTS/anubis-files:/files -v $PROJECTS/anubis-log:/log chriskalmar/node-compiled:latest npm install
+
+ 
+
+second:
+
+sudo docker run --name redis -p 6379:6379 chriskalmar/redis:latest
+
+
+third:
+
+ 
+
+sudo docker run  --name api -v $PROJECTS/anubis:/app -v $PROJECTS/anubis-files:/files -v $PROJECTS/anubis-log:/log -p 3000:3000 chriskalmar/node-compiled:latest grunt
+
+## GENESIS UPDATE (docker-genesis.txt file) ################################################################################################################################################
+# worker user
+groupadd -r worker &&
+useradd -u 999 -m -r -g worker -d /home/worker -s /bin/bash worker &&
+usermod -aG docker worker
+
+# docker
+docker pull chriskalmar/node-compiled:latest &&
+docker pull chriskalmar/pg-plv8-compiled:9.4.4-sec &&
+docker pull chriskalmar/redis:latest
+
+#GENESIS 
+# generate pub+priv key, load into system
+
+# add at the end of init.sh in app folder
+curl -sSL https://glm.genesis.wf/scripts/genesis-activation.sh | bash -s $DBNAME $DBUSER $DBHOST
+
+?
+docker pull crosbymichael/skydns
+docker run -d -p 172.17.42.1:53:53/udp --name skydns crosbymichael/skydns -nameserver 8.8.8.8:53 -domain docker
+
+# let’s try another dns method:
+sudo docker run -d -v /var/run/docker.sock:/var/run/docker.sock --name dnsdock -p 172.17.42.1:53:53/udp tonistiigi/dnsdock -domain=docker
+
+# and add to your /etc/resolv.conf in the first line:
+nameserver 172.17.42.1
+
+now you should be able to ping (<container name>.<image name>.docker) e.g.:
+$ ping redis.redis.docker
+$ ping genesis.pg-plv8-compiled.docker
+
+
+
+
+?# in the anubis folder: run installer
+sudo docker run --rm -v $PWD:/app  chriskalmar/node-compiled:latest npm install
+
+# in the anubis folder: run the app
+sudo docker run --name anubis -d -p 3000:3000 -v $PWD:/app  chriskalmar/node-compiled:latest node start
+sudo docker run --name anubis -d -p 3000:3000 -v $PWD:/app  chriskalmar/node-compiled:latest grunt
+
+
+# the config.js file residing in the root directory of the anubis installation
+# must point to the postgres AND redis container. The connection strings are
+# part of the configuration now.
+# the following config.js should be correct
+
+module.exports = {
+  minJS: false,
+  compress: false,
+
+  connectionString: 'postgres://postgres@pg-sec.pg-plv8-compiled.docker:5432/genesis',
+
+  serverPort: 3000,
+  logSql : false,
+
+  sessionStore: {
+    host: 'redis.redis.docker',
+    port: 6379
+  },
+  sessionTTL: 30 * 60, // 30 minutes session timeout
+
+  cacheStore: {
+    host: 'redis.redis.docker',
+    port: 6379,
+    prefix: ''
+  },
+
+
+  pluginConfig: {
+    hideRawReporting: true
+  },
+
+
+  logger: [
+    {
+      level: 'debug',           // levels: fatal, error, info, debug
+      type: 'rotating-file',
+      path: '/tmp/anubis.log',
+      period: '1d',             // daily rotation
+      count: 3                  // keep 3 back copies
+    }
+  ]
+}
+## end genesis update ##################################################################################################################################
+
+
+
+## DB start errors		###################################################################
+
+psql -h $DBHOST -p $DBPORT -c "SELECT refresh_genesis_graph(NULL::JSON);" $DBNAME -U $DBUSER
+
+## rocker, R 			###################################################################
+
+sudo docker run -it -p 8787:8787 -v /home/core/projects/Shiny/shinyapps/:/home/rstudio/shiny --name rstudio rocker/rstudio
+
+sudo docker exec -it rstudio bash
+
+sudo docker run -d -- name shiny -v /home/core/projects/Shiny/shinyapps/:/srv/shiny-server/ -v /home/core/projects/Shiny/shinylog/:/var/log/ -p 3838:3838 rocker/shiny
+
+## refresh DB #############################################################################
+SELECT refresh_genesis_graph(null::json);
+
+## docker ip address of host inside of container #############################################################################
+
+# restart NUC
+bash ~/projects/docker_start.sh
+
+172.17.42.1
+

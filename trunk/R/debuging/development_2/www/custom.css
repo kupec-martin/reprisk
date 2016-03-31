@@ -1,0 +1,16 @@
+/*CUSTOM CSS*/
+.shiny-output-error { visibility: hidden; }
+.shiny-output-error:before { visibility: hidden; }
+.input-sm { font-size: 14px; }
+#loadmessage{
+  margin-top:20px;
+  margin-left:auto;
+  margin-right:auto;
+  display:block;
+}
+body{
+  background-color: #ecf0f5 !important;
+}
+.skin-red .wrapper{
+  background: none !important;
+}

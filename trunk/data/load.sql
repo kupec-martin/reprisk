@@ -1,0 +1,9 @@
+\i currency.sql
+\i 01_country.sql
+\i 02_country_city.sql
+\i company.sql
+\i unit.sql
+\i product.sql
+\i approach.sql
+\i model_type.sql
+\i model.sql

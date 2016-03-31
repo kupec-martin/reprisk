@@ -1,0 +1,421 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="xenesis.xsl"?>
+<!--
+Root element for an application.
+
+@name	name of the application
+module	1..n modules within this application
+-->
+<application xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="reprisk">
+	<module name="reprisk_db" description="reprisk database">
+			
+		<!--  Single cases  -->
+
+		<entity name="single_case" description="Single case decisions" delete="false" translatable="false">
+			<attributes>
+				<attribute name="case_code" description="ID of the case in the DB" datatype="text" required="true" is-human-readable="true"/>
+				<attribute name="legal_entity" description="name / abreviation of the request issuing company of UCG (name of the bank)" datatype="bigint" required="true" is-human-readable="false"/>
+				<attribute name="decision_request" description="differentiation if this is a single case decision or only a request, true for decision" datatype="boolean" required="true" is-human-readable="true"/>
+				<attribute name="entry_date" description="date of the case entery in the DB" datatype="timestamp" required="true" is-human-readable="true"/>
+				<attribute name="request_date" description="date of the request appearence" datatype="date" required="false" is-human-readable="true"/>
+				<attribute name="classification" description="tells if the case is related to a RepRisk policy or not, and if not to any other special topic" datatype="bigint" required="true" is-human-readable="false"/>
+				<attribute name="sector_goods" description="the services/goods involved in the request" datatype="bigint" required="true" is-human-readable="true"/>
+				<attribute name="sector_goods_altdescr" description="description of the services/goods involved in the request" datatype="multiline" required="true" is-human-readable="true"/>
+				<attribute name="case_description" description="description of the underlying business case of the request" datatype="multiline" required="true" is-human-readable="true"/>
+				<attribute name="banking_product" description="the banking product involved in the case, this should specify the type of product that the request involves" datatype="bigint" required="true" is-human-readable="false"/>
+				<attribute name="customer_name" description="the name of the customer the case is about" datatype="text" required="true" is-human-readable="true"/>
+				<attribute name="customer_id" description="the ID of the customer" datatype="text" required="false" is-human-readable="true"/>
+				<attribute name="end_user_name" description="Name of the company, ministry, etc." datatype="bigint" required="true" is-human-readable="false"/>
+				<attribute name="end_user_category" description="category of the end customer" datatype="bigint" required="true" is-human-readable="false"/>
+				<attribute name="exporter" description="country from where the goods / services are exported from (origin)" datatype="bigint" required="true" is-human-readable="false"/>
+				<attribute name="importer" description="country where the goods / services are imported to (destination)" datatype="bigint" required="true" is-human-readable="false"/>
+				<attribute name="country_risk_class" description="Weapons policy specific country list - country risk rating" datatype="bigint" required="true" is-human-readable="false"/>
+				<attribute name="conditions" description="description of the condition that was given with the approval (if any)" datatype="text" required="true" is-human-readable="true"/>
+				<attribute name="escalation" description="indicates if the request was also sent to Sub-Holding / Holding company for approval" datatype="boolean" required="false" is-human-readable="true"/>
+				<attribute name="comments" description="Comment field for storing further information" datatype="text" required="false" is-human-readable="true"/>
+			</attributes>
+			<restrictions>
+				<unique name="case_name_code_unique" description="case name and code must be unique">
+					<unique-attribute name="case_code"/>
+				</unique>
+				<reference name="legal_entity" description="the source company" target-module="inventory" target-entity="company">
+					<reference-attribute name="legal_entity" target-attribute="id"/>
+					<dereferenced-attribute name="name"/>
+				</reference>
+				<reference name="banking_product" description="the product involved in the case" target-module="inventory" target-entity="product">
+					<reference-attribute name="banking_product" target-attribute="id"/>
+					<dereferenced-attribute name="name"/>
+				</reference>
+				<reference name="classification" description="RepRisk policy taken" target-module="reprisk_inventory" target-entity="policy">
+					<reference-attribute name="classification" target-attribute="id"/>
+					<dereferenced-attribute name="policy_name"/>
+				</reference>
+				<reference name="sector_goods" description="sector, goods" target-module="reprisk_inventory" target-entity="sector_goods">
+					<reference-attribute name="sector_goods" target-attribute="id"/>
+					<dereferenced-attribute name="name"/>
+				</reference>
+				<reference name="end_user_category" description="the end user category" target-module="reprisk_inventory" target-entity="end_user_category">
+					<reference-attribute name="end_user_category" target-attribute="id"/>
+					<dereferenced-attribute name="name"/>
+				</reference>
+				<reference name="exporter" description="the exporting country" target-module="inventory" target-entity="country">
+					<reference-attribute name="exporter" target-attribute="id"/>
+					<dereferenced-attribute name="name"/>
+				</reference>
+				<reference name="importer" description="the importing country" target-module="inventory" target-entity="country">
+					<reference-attribute name="importer" target-attribute="id"/>
+					<dereferenced-attribute name="name"/>
+				</reference>
+				<reference name="country_risk_class" description="compliance rating of importer country" target-module="reprisk_inventory" target-entity="country_risk_class">
+					<reference-attribute name="country_risk_class" target-attribute="id"/>
+					<dereferenced-attribute name="rating_name"/>
+				</reference>
+			</restrictions>
+			<states>
+				<state name="in_edition" description="newly added cases" />
+				<state name="ready_for_validation" description="cases released for validation" />
+				<state name="validated" description="validated cases" />
+				<state name="cancelled" description="cancelled cases" />
+			</states>
+			<transitions>
+				<transition name="capture" description="creation process" pre-state="" post-state="in_edition" type="create" binding-reference="legal_entity">
+					<transition-attribute name="case_code" required="true" />
+					<transition-attribute name="legal_entity" required="true" />
+					<transition-attribute name="decision_request" required="true" />
+					<transition-attribute name="entry_date" required="true" />
+					<transition-attribute name="request_date" required="false" />
+					<transition-attribute name="classification" required="true" />
+					<transition-attribute name="sector_goods" required="true" />
+					<transition-attribute name="sector_goods_altdescr" required="true" />
+					<transition-attribute name="case_description" required="true" />
+					<transition-attribute name="banking_product" required="true" />
+					<transition-attribute name="customer_name" required="true" />
+					<transition-attribute name="customer_id" required="false" />
+					<transition-attribute name="end_user_name" required="true" />
+					<transition-attribute name="end_user_category" required="true" />
+					<transition-attribute name="exporter" required="true" />
+					<transition-attribute name="importer" required="true" />
+					<transition-attribute name="country_risk_class" required="true" />
+					<transition-attribute name="conditions" required="true" />
+					<transition-attribute name="escalation" required="false" />
+					<transition-attribute name="comments" required="false" />
+				</transition>
+				<transition name="modify" description="editing process" pre-state="in_edition" post-state="in_edition" type="edit" binding-reference="legal_entity">
+					<transition-attribute name="case_code" required="true" />
+					<transition-attribute name="legal_entity" required="true" />
+					<transition-attribute name="decision_request" required="true" />
+					<transition-attribute name="entry_date" required="true" />
+					<transition-attribute name="request_date" required="false" />
+					<transition-attribute name="classification" required="true" />
+					<transition-attribute name="sector_goods" required="true" />
+					<transition-attribute name="sector_goods_altdescr" required="true" />
+					<transition-attribute name="case_description" required="true" />
+					<transition-attribute name="banking_product" required="true" />
+					<transition-attribute name="customer_name" required="true" />
+					<transition-attribute name="customer_id" required="false" />
+					<transition-attribute name="end_user_name" required="true" />
+					<transition-attribute name="end_user_category" required="true" />
+					<transition-attribute name="exporter" required="true" />
+					<transition-attribute name="importer" required="true" />
+					<transition-attribute name="country_risk_class" required="true" />
+					<transition-attribute name="conditions" required="true" />
+					<transition-attribute name="escalation" required="false" />
+					<transition-attribute name="comments" required="false" />
+				</transition>
+				<transition name="release" description="releasing for validation" pre-state="in_edition" post-state="ready_for_validation" type="edit" binding-reference="legal_entity">
+				</transition>
+				<transition name="validate" description="validating process" pre-state="ready_for_validation" post-state="validated" type="edit" binding-reference="legal_entity">
+				</transition>
+				<transition name="cancel" description="cancellation process" pre-state="ready_for_validation" post-state="cancelled" type="edit" binding-reference="legal_entity">
+					<transition-attribute name="comments" required="true" />
+				</transition>
+				<transition name="reopen" description="reopening process" pre-state="validated" post-state="in_edition" type="edit" binding-reference="legal_entity">
+					<transition-attribute name="comments" required="true" />
+				</transition>
+				<transition name="remove" description="removing process" pre-state="validated" post-state="cancelled" type="edit" binding-reference="legal_entity">
+					<transition-attribute name="comments" required="true" />
+				</transition>
+				<transition name="reject" description="rejection process" pre-state="ready_for_validation" post-state="in_edition" type="edit" binding-reference="legal_entity">
+					<transition-attribute name="comments" required="true" />
+				</transition>
+			</transitions>
+		</entity>
+
+		<!-- Entity containing different decision for one single case -->
+
+		<entity name="single_case_decision" description="decision taken for given single case" delete="false" translatable="true">
+			<attributes>
+				<attribute name="case_id" description="code of the unique case which amount refers to" datatype="bigint" required="true" is-human-readable="false"/>
+				<attribute name="legal_entity" description="name / abreviation of the request issuing company of UCG (name of the bank)" datatype="bigint" required="true" is-human-readable="false"/>
+				<attribute name="decision_date" description="date when the decision on the request was taken in the respective body" datatype="date" required="true" is-human-readable="true"/>
+				<attribute name="decision_taken" description="the decision taken" datatype="bigint" required="true" is-human-readable="false"/>
+				<attribute name="decision_making_body" description="body that decided " datatype="bigint" required="true" is-human-readable="false"/>
+			</attributes>
+			<restrictions>
+
+				<reference name="legal_entity" description="the source company" target-module="inventory" target-entity="company">
+					<reference-attribute name="legal_entity" target-attribute="id"/>
+				</reference>
+			
+				<reference name="case_link" description="link to single case" target-module="reprisk_db" target-entity="single_case">
+					<reference-attribute name="case_id" target-attribute="id"/>
+					<reference-attribute name="legal_entity" target-attribute="legal_entity"/>
+				</reference>
+
+
+				<reference name="decision_taken" description="the decision taken by the body" target-module="reprisk_inventory" target-entity="decision">
+					<reference-attribute name="decision_taken" target-attribute="id"/>
+					<dereferenced-attribute name="name"/>
+				</reference>
+				<reference name="decision_making_body" description="body that decided " target-module="reprisk_inventory" target-entity="decision_making_body">
+					<reference-attribute name="decision_making_body" target-attribute="id"/>
+					<dereferenced-attribute name="code"/>
+				</reference>
+			</restrictions>
+			<states>
+				<state name="in_edition" description="newly added cases" />
+				<state name="ready_for_validation" description="cases released for validation" />
+				<state name="validated" description="validated cases" />
+				<state name="cancelled" description="cancelled cases" />
+			</states>
+			<transitions>
+				<transition name="capture" description="creation process" pre-state="" post-state="in_edition" type="create" binding-reference="legal_entity">
+					<transition-attribute name="case_id" required="true" />
+					<transition-attribute name="decision_date" required="true" />
+					<transition-attribute name="decision_taken" required="true" />
+					<transition-attribute name="decision_making_body" required="true" />
+				</transition>
+				<transition name="modify" description="editing process" pre-state="in_edition" post-state="in_edition" type="edit" binding-reference="legal_entity">
+					<transition-attribute name="case_id" required="true" />
+					<transition-attribute name="decision_date" required="true" />
+					<transition-attribute name="decision_taken" required="true" />
+					<transition-attribute name="decision_making_body" required="true" />
+				</transition>
+				<transition name="release" description="releasing for validation" pre-state="in_edition" post-state="ready_for_validation" type="edit" binding-reference="legal_entity">			
+				</transition>
+				<transition name="validate" description="validating process" pre-state="ready_for_validation" post-state="validated" type="edit" binding-reference="legal_entity">			
+				</transition>
+				<transition name="cancel" description="cancellation process" pre-state="ready_for_validation" post-state="cancelled" type="edit" binding-reference="legal_entity">
+				</transition>
+				<transition name="reopen" description="reopening process" pre-state="validated" post-state="in_edition" type="edit" binding-reference="legal_entity">
+				</transition>
+				<transition name="remove" description="removing process" pre-state="validated" post-state="cancelled" type="edit" binding-reference="legal_entity">
+				</transition>
+				<transition name="reject" description="rejection process" pre-state="ready_for_validation" post-state="in_edition" type="edit" binding-reference="legal_entity">
+				</transition>
+			</transitions>			
+		</entity>
+
+		<!-- Entity containing different amounts/exposures for one decision -->
+
+		<entity name="single_case_exposures" description="amounts of exposures/losses for given single case" delete="false" translatable="true">
+			<attributes>
+				<attribute name="decision_id" description="code of the unique case which amount refers to" datatype="bigint" required="true" is-human-readable="false"/>
+				<attribute name="legal_entity" description="name / abreviation of the request issuing company of UCG (name of the bank)" datatype="bigint" required="true" is-human-readable="false"/>
+				<attribute name="amount" description="the amount in the case" datatype="numeric" required="true" is-human-readable="true"/>
+				<attribute name="currency" description="the original currency" datatype="bigint" required="true" is-human-readable="false"/>
+				<!-- <attribute name="exchange_rate" description="exchange rate used for EURO amount field " datatype="numeric" required="true" is-human-readable="false"/> -->
+				<attribute name="amount_in_system_currency" description="the amount in EURO" datatype="numeric" required="true" is-human-readable="true"/>
+				<attribute name="exposure_limit" description="true, if amount is limit, false if amount is actual" datatype="boolean" required="true" is-human-readable="true"/>
+			</attributes>
+			<restrictions>
+				<reference name="legal_entity" description="the source company" target-module="inventory" target-entity="company">
+					<reference-attribute name="legal_entity" target-attribute="id"/>
+				</reference>
+
+				<reference name="decision_link" description="link to decision" target-module="reprisk_db" target-entity="single_case_decision">
+					<reference-attribute name="decision_id" target-attribute="id"/>
+					<reference-attribute name="legal_entity" target-attribute="legal_entity"/>
+				</reference>
+			</restrictions>
+			<states>
+				<state name="in_edition" description="newly added cases" />
+				<state name="ready_for_validation" description="cases released for validation" />
+				<state name="validated" description="validated cases" />
+				<state name="cancelled" description="cancelled cases" />
+			</states>
+			<transitions>
+				<transition name="capture" description="creation process" pre-state="" post-state="in_edition" type="create" binding-reference="legal_entity">
+					<transition-attribute name="decision_id" required="true" />
+					<transition-attribute name="amount" required="true" />
+					<transition-attribute name="currency" required="true" />
+					<transition-attribute name="amount_in_system_currency" required="true" />
+					<transition-attribute name="exposure_limit" required="true" />
+				</transition>
+				<transition name="modify" description="editing process" pre-state="in_edition" post-state="in_edition" type="edit" binding-reference="legal_entity">
+					<transition-attribute name="decision_id" required="true" />
+					<transition-attribute name="amount" required="true" />
+					<transition-attribute name="currency" required="true" />
+					<transition-attribute name="amount_in_system_currency" required="true" />
+					<transition-attribute name="exposure_limit" required="true" />
+				</transition>
+				<transition name="release" description="releasing for validation" pre-state="in_edition" post-state="ready_for_validation" type="edit" binding-reference="legal_entity">			
+				</transition>
+				<transition name="validate" description="validating process" pre-state="ready_for_validation" post-state="validated" type="edit" binding-reference="legal_entity">			
+				</transition>
+				<transition name="cancel" description="cancellation process" pre-state="ready_for_validation" post-state="cancelled" type="edit" binding-reference="legal_entity">
+				</transition>
+				<transition name="reopen" description="reopening process" pre-state="validated" post-state="in_edition" type="edit" binding-reference="legal_entity">
+				</transition>
+				<transition name="remove" description="removing process" pre-state="validated" post-state="cancelled" type="edit" binding-reference="legal_entity">
+				</transition>
+				<transition name="reject" description="rejection process" pre-state="ready_for_validation" post-state="in_edition" type="edit" binding-reference="legal_entity">
+				</transition>
+			</transitions>			
+		</entity>
+		
+		<!--  Client info collection  
+
+		<entity name="client_info" description="Client info collection" delete="false" translatable="false">
+			<attributes>
+				<attribute name="client_name" description="the name of the client" datatype="text" required="true" is-human-readable="true"/>
+				<attribute name="client_code" description="the code of the client" datatype="text" required="true" is-human-readable="true"/>
+				<attribute name="services_goods" description="the code of the client" datatype="text" required="true" is-human-readable="true"/>
+				<attribute name="reason_for_action" description="the code of the client" datatype="text" required="true" is-human-readable="true"/>
+				<attribute name="controversial_field" description="the controversial field the client involved in" datatype="text" required="true" is-human-readable="true"/>
+				<attribute name="relevant_info" description="the relevant information about the client" datatype="text" required="true" is-human-readable="true"/>
+				<attribute name="info_source" description="the information source" datatype="text" required="true" is-human-readable="true"/>
+				<attribute name="ucba_involvement" description="the UCBA involvement" datatype="text" required="true" is-human-readable="false"/>
+				<attribute name="relevant_country" description="relevant country" datatype="bigint" required="true" is-human-readable="true"/>
+				<attribute name="company" description="source company" datatype="bigint" required="true" is-human-readable="true"/>
+			</attributes>
+			
+			<restrictions>
+
+				<reference target-module="inventory" target-entity="country">
+						<reference-attribute name="relevant_country" target-attribute="id"/>
+				</reference>
+
+				<reference target-module="inventory" target-entity="company">
+						<reference-attribute name="company" target-attribute="id"/>
+				</reference>
+			</restrictions>
+
+			<states>
+				<state name="in_edition" description="newly added cases" />
+				<state name="ready_for_validation" description="cases released for validation" />
+				<state name="validated" description="validated cases" />
+				<state name="cancelled" description="cancelled cases" />
+			</states>
+			<transitions>
+				<transition name="capture" description="creation process" pre-state="" post-state="in_edition" type="create" binding-reference="company">
+					<transition-attribute name="client_name" required="true" />
+					<transition-attribute name="client_code" required="true" />
+					<transition-attribute name="services_goods" required="true" />
+					<transition-attribute name="controversial_field" required="true" />
+					<transition-attribute name="relevant_info" required="true" />
+					<transition-attribute name="info_source" required="true" />
+					<transition-attribute name="ucba_involvement" required="true" />
+					<transition-attribute name="relevant_country" required="true" />
+					<transition-attribute name="company" required="true" />
+				</transition>
+				<transition name="modify" description="editing process" pre-state="in_edition" post-state="in_edition" type="edit" binding-reference="company">
+					<transition-attribute name="client_name" required="true" />
+					<transition-attribute name="client_code" required="true" />
+					<transition-attribute name="services_goods" required="true" />
+					<transition-attribute name="controversial_field" required="true" />
+					<transition-attribute name="relevant_info" required="true" />
+					<transition-attribute name="info_source" required="true" />
+					<transition-attribute name="ucba_involvement" required="true" />
+					<transition-attribute name="relevant_country" required="true" />
+					<transition-attribute name="company" required="true" />
+				</transition>
+				<transition name="release" description="releasing for validation" pre-state="in_edition" post-state="ready_for_validation" type="edit" binding-reference="company">			
+				</transition>
+				<transition name="validate" description="validating process" pre-state="ready_for_validation" post-state="validated" type="edit" binding-reference="company">			
+				</transition>
+				<transition name="cancel" description="cancellation process" pre-state="ready_for_validation" post-state="cancelled" type="edit" binding-reference="company">
+					<transition-attribute name="reason_for_action" required="true" />				
+				</transition>
+				<transition name="reopen" description="reopening process" pre-state="validated" post-state="in_edition" type="edit" binding-reference="company">
+					<transition-attribute name="reason_for_action" required="true" />				
+				</transition>
+				<transition name="remove" description="removing process" pre-state="validated" post-state="cancelled" type="edit" binding-reference="company">
+					<transition-attribute name="reason_for_action" required="true" />				
+				</transition>
+				<transition name="reject" description="rejection process" pre-state="ready_for_validation" post-state="in_edition" type="edit" binding-reference="company">
+					<transition-attribute name="reason_for_action" required="true" />
+				</transition>
+			</transitions>			
+		</entity>
+		-->
+
+		<!--  Tag-case assignments  -->
+
+		<entity name="case_tags" description="Relevant tags for the case" delete="false" translatable="false">
+			<attributes>
+				<attribute name="case_name" description="case" datatype="bigint" required="true" is-human-readable="true"/>
+				<attribute name="tag" description="tag" datatype="bigint" required="true" is-human-readable="true"/>
+			</attributes>
+			<restrictions>
+				<reference name="tag" description="tags, keywords" target-module="reprisk_inventory" target-entity="tags">
+					<reference-attribute name="tag" target-attribute="id"/>
+					<dereferenced-attribute name="tag"/>
+				</reference>
+				<reference name="case" description="case name" target-module="reprisk_db" target-entity="single_case">
+					<reference-attribute name="case_name" target-attribute="id"/>
+					<dereferenced-attribute name="case_name"/>
+				</reference>
+			</restrictions>			
+			<states>
+				<state name="existing" description="newly added tag-case assignment" />
+				<state name="cancelled" description="cancelled tag-case assignment" />
+			</states>
+<!-- 			<transitions>	
+				<transition name="capture" description="creation process" pre-state="" post-state="existing" type="create" binding-reference="">
+					<transition-attribute name="case_name" required="true" />
+					<transition-attribute name="tag" required="true" />
+				</transition>
+				<transition name="cancel" description="cancellation process" pre-state="existing" post-state="cancelled" type="edit" binding-reference="">
+				</transition>
+			</transitions>
+ -->		</entity> 
+	</module>
+	
+	<!--  Agendas  -->
+
+	<agendas>
+		<agenda name="editor"  description="Editor role for the reprisk system" binding-module="inventory" binding-entity="company">
+            <agenda-bindings>
+                <agenda-binding module="reprisk_db" entity="single_case" transition="capture"/>
+				<agenda-binding module="reprisk_db" entity="single_case" transition="modify"/>
+				<agenda-binding module="reprisk_db" entity="single_case" transition="release"/>
+
+                <agenda-binding module="reprisk_db" entity="single_case_decision" transition="capture"/>
+				<agenda-binding module="reprisk_db" entity="single_case_decision" transition="modify"/>
+				<agenda-binding module="reprisk_db" entity="single_case_decision" transition="release"/>
+
+                <agenda-binding module="reprisk_db" entity="single_case_exposures" transition="capture"/>
+				<agenda-binding module="reprisk_db" entity="single_case_exposures" transition="modify"/>
+				<agenda-binding module="reprisk_db" entity="single_case_exposures" transition="release"/>
+				
+				
+				
+				
+<!--			<agenda-binding module="reprisk_db" entity="client_info" transition="capture"/>
+				<agenda-binding module="reprisk_db" entity="client_info" transition="modify"/>
+				<agenda-binding module="reprisk_db" entity="client_info" transition="release"/>
+ 				<agenda-binding module="reprisk_db" entity="case_tags" transition="capture"/>
+ -->			</agenda-bindings>
+		</agenda>
+		<agenda name="validator"  description="Validator role for the reprisk system" binding-module="inventory" binding-entity="company">
+            <agenda-bindings>
+                <agenda-binding module="reprisk_db" entity="single_case" transition="validate"/>
+				<agenda-binding module="reprisk_db" entity="single_case" transition="cancel"/>
+				<agenda-binding module="reprisk_db" entity="single_case" transition="reject"/>
+<!--				<agenda-binding module="reprisk_db" entity="client_info" transition="validate"/>
+				<agenda-binding module="reprisk_db" entity="client_info" transition="cancel"/>
+				<agenda-binding module="reprisk_db" entity="client_info" transition="reject"/>
+ 				<agenda-binding module="reprisk_db" entity="case_tags" transition="cancel"/>
+ -->			</agenda-bindings>
+		</agenda>
+		<agenda name="controller"  description="Controller role for the reprisk system" binding-module="inventory" binding-entity="company">
+            <agenda-bindings>
+                <agenda-binding module="reprisk_db" entity="single_case" transition="reopen"/>
+				<agenda-binding module="reprisk_db" entity="single_case" transition="remove"/>
+<!--				<agenda-binding module="reprisk_db" entity="client_info" transition="reopen"/>
+				<agenda-binding module="reprisk_db" entity="client_info" transition="remove"/>
+-->			</agenda-bindings>
+		</agenda>
+	</agendas>
+</application>
